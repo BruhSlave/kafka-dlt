@@ -2,9 +2,9 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"log"
 	"time"
-	"encoding/json"
 
 	"github.com/twmb/franz-go/pkg/kgo"
 )
