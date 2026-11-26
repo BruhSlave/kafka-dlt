@@ -137,6 +137,63 @@ services:
       RATE: 5
       KEY_MODE: user_id
 
+  
+  consumer-1:
+    build:
+      context: ./consumer
+      dockerfile: Dockerfile
+    container_name: consumer-1
+    restart: unless-stopped
+    depends_on:
+      topic-init:
+        condition: service_completed_successfully
+      postgres:
+        condition: service_started
+    environment:
+      BROKERS: kafka-1:9092,kafka-2:9092,kafka-3:9092
+      TOPIC: events
+      GROUP_ID: events-processor
+      CONSUMER_ID: consumer-1
+      PROCESSING_DELAY_MS: 500
+      DATABASE_URL: postgres://kafka:kafka_pass@postgres:5432/events_sink
+
+  consumer-2:
+    build:
+      context: ./consumer
+      dockerfile: Dockerfile
+    container_name: consumer-2
+    restart: unless-stopped
+    depends_on:
+      topic-init:
+        condition: service_completed_successfully
+      postgres:
+        condition: service_started
+    environment:
+      BROKERS: kafka-1:9092,kafka-2:9092,kafka-3:9092
+      TOPIC: events
+      GROUP_ID: events-processor
+      CONSUMER_ID: consumer-2
+      PROCESSING_DELAY_MS: 500
+      DATABASE_URL: postgres://kafka:kafka_pass@postgres:5432/events_sink
+
+  consumer-3:
+    build:
+      context: ./consumer
+      dockerfile: Dockerfile
+    container_name: consumer-3
+    restart: unless-stopped
+    depends_on:
+      topic-init:
+        condition: service_completed_successfully
+      postgres:
+        condition: service_started
+    environment:
+      BROKERS: kafka-1:9092,kafka-2:9092,kafka-3:9092
+      TOPIC: events
+      GROUP_ID: events-processor
+      CONSUMER_ID: consumer-3
+      PROCESSING_DELAY_MS: 500
+      DATABASE_URL: postgres://kafka:kafka_pass@postgres:5432/events_sink
 
   postgres:
     image: postgres:17
