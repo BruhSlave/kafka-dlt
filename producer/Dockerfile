@@ -3,11 +3,12 @@ FROM golang:1.27.4 AS builder
 WORKDIR /app
 
 COPY go.mod go.sum ./
+
 RUN go mod download
 
 COPY *.go ./
-RUN go build -o producer .
 
+RUN CGO_ENABLED=0 GOOS=linux go build -o producer .
 
 
 FROM alpine:3.21
