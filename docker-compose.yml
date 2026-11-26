@@ -138,8 +138,24 @@ services:
       KEY_MODE: user_id
 
 
+  postgres:
+    image: postgres:17
+    container_name: postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+
+
 volumes:
   kafka1-data:
   kafka2-data:
   kafka3-data:
+  postgres_data:
 
