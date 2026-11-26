@@ -54,6 +54,8 @@ func runConsumer(ctx context.Context, client *kgo.Client, sink *Sink, cfg Config
 				continue
 			}
 		}
+
+		client.AllowRebalance()
 	}
 }
 
