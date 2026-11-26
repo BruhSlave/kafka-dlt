@@ -21,7 +21,7 @@ func runConsumer(ctx context.Context, client *kgo.Client, sink *Sink, cfg Config
 			return
 		}
 
-		fetches.EachError(func(topic string, partition int, err error) {
+		fetches.EachError(func(topic string, partition int32, err error) {
 			log.Printf("fetch error topic=%s partition=%d: %v", topic, partition, err)
 		})
 
@@ -39,7 +39,7 @@ func runConsumer(ctx context.Context, client *kgo.Client, sink *Sink, cfg Config
 				event,
 				cfg.ConsumerID,
 				record.Topic,
-				record.Partition,
+				int(record.Partition),
 				record.Offset,
 			)
 
