@@ -11,6 +11,8 @@ import (
 	"github.com/twmb/franz-go/pkg/kgo"
 )
 
+var duplicateCount int64
+
 func runConsumer(ctx context.Context, client *kgo.Client, sink *Sink, cfg Config) {
 	for {
 		if ctx.Err() != nil {
@@ -90,7 +92,8 @@ func processWithRetry(
 
 			if err == nil {
 				if !inserted {
-					log.Printf("duplicate event_id=%s", event.EventID)
+					duplicateCount++
+					log.Printf("duplicate event_id=%s total_duplicates=%d", event.EventID, duplicateCount)
 				}
 				log.Printf(
 					"processed user=%s seq=%d partition=%d offset=%d attempt=%d",
