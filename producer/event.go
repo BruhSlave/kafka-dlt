@@ -63,4 +63,3 @@ func generatePayload(eventType string, poison bool) (json.RawMessage, error) {
 func randomProductID() string {
 	return "product_" + uuid.NewString()[:8]
 }
-

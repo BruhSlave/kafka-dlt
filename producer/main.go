@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"os"
@@ -10,27 +11,26 @@ import (
 	"strings"
 	"syscall"
 	"time"
-	"encoding/json"
 
 	"github.com/twmb/franz-go/pkg/kgo"
 )
 
 type Config struct {
-	Brokers   []string
-	Topic     string
+	Brokers    []string
+	Topic      string
 	ProducerID string
-	UserStart int
-	UserEnd   int
-	Rate      int
-	KeyMode   string
+	UserStart  int
+	UserEnd    int
+	Rate       int
+	KeyMode    string
 }
 
 func loadConfig() (Config, error) {
 	cfg := Config{
-		Brokers:   strings.Split(getEnv("BROKERS", "kafka-1:9092,kafka-2:9092,kafka-3:9092"), ","),
-		Topic:     getEnv("TOPIC", "events"),
+		Brokers:    strings.Split(getEnv("BROKERS", "kafka-1:9092,kafka-2:9092,kafka-3:9092"), ","),
+		Topic:      getEnv("TOPIC", "events"),
 		ProducerID: getEnv("PRODUCER_ID", "producer-1"),
-		KeyMode:   getEnv("KEY_MODE", "user_id"),
+		KeyMode:    getEnv("KEY_MODE", "user_id"),
 	}
 
 	var err error
@@ -208,4 +208,3 @@ func isPoison(event Event) bool {
 	}
 	return payload.Poison
 }
-
