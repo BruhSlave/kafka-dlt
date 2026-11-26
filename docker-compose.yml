@@ -83,6 +83,61 @@ services:
     entrypoint: ["/bin/bash", "/app/topicInit.sh"]
 
 
+  producer-1:
+    build:
+      context: ./producer
+      dockerfile: Dockerfile
+    container_name: producer-1
+    restart: unless-stopped
+    depends_on:
+      topic-init:
+        condition: service_completed_successfully
+    environment:
+      BROKERS: kafka-1:9092,kafka-2:9092,kafka-3:9092
+      TOPIC: events
+      PRODUCER_ID: producer-1
+      USER_ID_START: 1
+      USER_ID_END: 100
+      RATE: 5
+      KEY_MODE: user_id
+
+  producer-2:
+    build:
+      context: ./producer
+      dockerfile: Dockerfile
+    container_name: producer-2
+    restart: unless-stopped
+    depends_on:
+      topic-init:
+        condition: service_completed_successfully
+    environment:
+      BROKERS: kafka-1:9092,kafka-2:9092,kafka-3:9092
+      TOPIC: events
+      PRODUCER_ID: producer-2
+      USER_ID_START: 101
+      USER_ID_END: 200
+      RATE: 5
+      KEY_MODE: user_id
+
+  producer-3:
+    build:
+      context: ./producer
+      dockerfile: Dockerfile
+    container_name: producer-3
+    restart: unless-stopped
+    depends_on:
+      topic-init:
+        condition: service_completed_successfully
+    environment:
+      BROKERS: kafka-1:9092,kafka-2:9092,kafka-3:9092
+      TOPIC: events
+      PRODUCER_ID: producer-3
+      USER_ID_START: 201
+      USER_ID_END: 300
+      RATE: 5
+      KEY_MODE: user_id
+
+
 volumes:
   kafka1-data:
   kafka2-data:
