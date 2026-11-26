@@ -30,7 +30,15 @@ func main() {
 		kgo.AutoCommitInterval(0),
 		kgo.FetchMaxWait(500*time.Millisecond),
 		kgo.ConsumeResetOffset(kgo.NewOffset().AtStart()),
+		kgo.OnPartitionsRevoked(func(ctx context.Context, client *kgo.Client, revoked map[string][]int32) {
+			log.Printf("partitions revoked: %v", revoked)
+
+			if err := client.CommitUncommittedOffsets(ctx); err != nil {
+				log.Printf("commit before revoke failed: %v", err)
+			}
+		}),
 	)
+
 	if err != nil {
 		log.Fatalf("failed to create kafka client: %v", err)
 	}
