@@ -1,8 +1,10 @@
+
 package main
 
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"log"
 	"time"
 
@@ -26,14 +28,57 @@ func runConsumer(ctx context.Context, client *kgo.Client, sink *Sink, cfg Config
 		})
 
 		for _, record := range fetches.Records() {
-			var event Event
-			if err := json.Unmarshal(record.Value, &event); err != nil {
-				log.Printf("invalid event at offset %d: %v", record.Offset, err)
-				continue
+			if ctx.Err() != nil {
+				return
 			}
 
-			time.Sleep(time.Duration(cfg.ProcessingDelay) * time.Millisecond)
+			err := processWithRetry(ctx, sink, cfg, record)
 
+			if err != nil {
+				log.Printf(
+					"processing failed after retries topic=%s partition=%d offset=%d: %v",
+					record.Topic, record.Partition, record.Offset, err,
+				)
+
+				if dltErr := sendToDLT(ctx, client, cfg, record, err.Error()); dltErr != nil {
+					log.Printf("DLT send failed: %v", dltErr)
+					continue
+				}
+
+				log.Printf("sent to DLT topic=%s offset=%d", record.Topic, record.Offset)
+			}
+
+			if err := client.CommitRecords(ctx, record); err != nil {
+				log.Printf("commit error: %v", err)
+				continue
+			}
+		}
+	}
+}
+
+func processWithRetry(
+	ctx context.Context,
+	sink *Sink,
+	cfg Config,
+	record *kgo.Record,
+) error {
+	var event Event
+	if err := json.Unmarshal(record.Value, &event); err != nil {
+		return err
+	}
+
+	var lastErr error
+
+	for attempt := 1; attempt <= 3; attempt++ {
+		if ctx.Err() != nil {
+			return ctx.Err()
+		}
+
+		time.Sleep(time.Duration(cfg.ProcessingDelay) * time.Millisecond)
+
+		if isPoison(event) {
+			lastErr = errors.New("poison event")
+		} else {
 			inserted, err := sink.SaveEvent(
 				ctx,
 				event,
@@ -43,27 +88,38 @@ func runConsumer(ctx context.Context, client *kgo.Client, sink *Sink, cfg Config
 				record.Offset,
 			)
 
-			if err != nil {
-				log.Printf("save error: %v", err)
-				continue
+			if err == nil {
+				if !inserted {
+					log.Printf("duplicate event_id=%s", event.EventID)
+				}
+				log.Printf(
+					"processed user=%s seq=%d partition=%d offset=%d attempt=%d",
+					event.UserID, event.Seq, record.Partition, record.Offset, attempt,
+				)
+				return nil
 			}
 
-			if !inserted {
-				log.Printf("duplicate event_id=%s", event.EventID)
-			}
-
-			if err := client.CommitRecords(ctx, record); err != nil {
-				log.Printf("commit error: %v", err)
-				continue
-			}
-
-			log.Printf(
-				"processed user=%s seq=%d partition=%d offset=%d",
-				event.UserID,
-				event.Seq,
-				record.Partition,
-				record.Offset,
-			)
+			lastErr = err
 		}
+
+		log.Printf(
+			"retry %d/3 topic=%s partition=%d offset=%d: %v",
+			attempt, record.Topic, record.Partition, record.Offset, lastErr,
+		)
 	}
+
+	return lastErr
 }
+
+func isPoison(event Event) bool {
+	var payload struct {
+		Poison bool `json:"poison"`
+	}
+
+	if err := json.Unmarshal(event.Payload, &payload); err != nil {
+		return false
+	}
+
+	return payload.Poison
+}
+
