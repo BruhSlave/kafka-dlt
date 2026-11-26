@@ -12,6 +12,7 @@ type Config struct {
 	GroupID         string
 	ConsumerID      string
 	ProcessingDelay int
+	DLTTopic        string
 }
 
 func loadConfig() Config {
@@ -21,6 +22,7 @@ func loadConfig() Config {
 		GroupID:         getEnv("GROUP_ID", "events-processor"),
 		ConsumerID:      getEnv("CONSUMER_ID", "consumer-1"),
 		ProcessingDelay: getEnvInt("PROCESSING_DELAY_MS", 100),
+		DLTTopic:        getEnv("DLT_TOPIC", "events.dlt"),
 	}
 }
 
