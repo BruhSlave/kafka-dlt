@@ -1,4 +1,3 @@
-
 package main
 
 import (
@@ -125,4 +124,3 @@ func isPoison(event Event) bool {
 
 	return payload.Poison
 }
-
