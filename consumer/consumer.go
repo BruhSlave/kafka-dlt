@@ -18,7 +18,7 @@ func runConsumer(ctx context.Context, client *kgo.Client, sink *Sink, cfg Config
 			return
 		}
 
-		fetches := client.PollFetches(ctx)
+		fetches := client.PollRecords(ctx, 100)
 
 		if ctx.Err() != nil {
 			return
