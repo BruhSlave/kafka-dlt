@@ -43,7 +43,7 @@ func runConsumer(ctx context.Context, client *kgo.Client, sink *Sink, cfg Config
 
 				if dltErr := sendToDLT(ctx, client, cfg, record, err.Error()); dltErr != nil {
 					log.Printf("DLT send failed: %v", dltErr)
-					continue
+					return
 				}
 
 				log.Printf("sent to DLT topic=%s offset=%d", record.Topic, record.Offset)
@@ -51,11 +51,10 @@ func runConsumer(ctx context.Context, client *kgo.Client, sink *Sink, cfg Config
 
 			if err := client.CommitRecords(ctx, record); err != nil {
 				log.Printf("commit error: %v", err)
-				continue
+				return
 			}
 		}
 
-		client.AllowRebalance()
 	}
 }
 

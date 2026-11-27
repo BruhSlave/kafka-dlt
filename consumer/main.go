@@ -27,7 +27,6 @@ func main() {
 		kgo.ConsumerGroup(cfg.GroupID),
 		kgo.ConsumeTopics(cfg.Topic),
 		kgo.DisableAutoCommit(),
-		kgo.BlockRebalanceOnPoll(),
 		kgo.FetchMaxWait(500*time.Millisecond),
 		kgo.ConsumeResetOffset(kgo.NewOffset().AtStart()),
 	)
