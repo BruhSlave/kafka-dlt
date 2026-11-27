@@ -93,7 +93,13 @@ func processWithRetry(
 			if err == nil {
 				if !inserted {
 					duplicateCount++
-					log.Printf("duplicate event_id=%s total_duplicates=%d", event.EventID, duplicateCount)
+
+					if err := sink.IncrementDuplicates(ctx, cfg.ConsumerID); err != nil {
+						return err
+					}
+
+					log.Printf("duplicate event_id=%s total_duplicates=%d",
+						event.EventID, duplicateCount)
 				}
 				log.Printf(
 					"processed user=%s seq=%d partition=%d offset=%d attempt=%d",

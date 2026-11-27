@@ -54,3 +54,13 @@ func (s *Sink) SaveEvent(
 	return tag.RowsAffected() == 1, nil
 }
 
+func (s *Sink) IncrementDuplicates(ctx context.Context, consumerID string) error {
+	_, err := s.conn.Exec(ctx, `
+		INSERT INTO consumer_stats (consumer_id, duplicates_count)
+		VALUES ($1, 1)
+		ON CONFLICT (consumer_id)
+		DO UPDATE SET duplicates_count = consumer_stats.duplicates_count + 1
+	`, consumerID)
+
+	return err
+}
