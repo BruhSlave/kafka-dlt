@@ -98,7 +98,7 @@ services:
       USER_ID_START: 1
       USER_ID_END: 100
       RATE: 1
-      KEY_MODE: user_id
+      KEY_MODE: none
 
   producer-2:
     build:
@@ -115,7 +115,7 @@ services:
       USER_ID_START: 101
       USER_ID_END: 200
       RATE: 1
-      KEY_MODE: user_id
+      KEY_MODE: none
 
   producer-3:
     build:
@@ -132,7 +132,7 @@ services:
       USER_ID_START: 201
       USER_ID_END: 300
       RATE: 1
-      KEY_MODE: user_id
+      KEY_MODE: none
 
   
   consumer-1:

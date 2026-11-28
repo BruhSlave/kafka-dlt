@@ -198,12 +198,20 @@ func printOrderViolations(ctx context.Context, db *pgx.Conn) {
 	var count int64
 
 	err := db.QueryRow(ctx, `
+		WITH ordered AS (
+			SELECT
+				user_id,
+				seq,
+				MAX(seq) OVER (
+					PARTITION BY user_id
+					ORDER BY processed_at, event_id
+					ROWS BETWEEN UNBOUNDED PRECEDING AND 1 PRECEDING
+				) AS previous_max_seq
+			FROM processed_events
+		)
 		SELECT COUNT(*)
-		FROM processed_events lower_event
-		JOIN processed_events higher_event
-		  ON lower_event.user_id = higher_event.user_id
-		 AND lower_event.seq < higher_event.seq
-		 AND lower_event.processed_at > higher_event.processed_at
+		FROM ordered
+		WHERE seq < previous_max_seq
 	`).Scan(&count)
 
 	if err != nil {
@@ -212,7 +220,7 @@ func printOrderViolations(ctx context.Context, db *pgx.Conn) {
 	}
 
 	fmt.Println("\n=== ORDER CHECK ===")
-	fmt.Printf("Out-of-order event pairs: %d\n", count)
+	fmt.Printf("Out-of-order events: %d\n", count)
 }
 
 func getEnv(key, fallback string) string {
