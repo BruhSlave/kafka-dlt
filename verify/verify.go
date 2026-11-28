@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"sort"
 	"time"
 
 	"github.com/jackc/pgx/v5"
@@ -124,7 +123,7 @@ func addSeq(events map[string]map[int]bool, user string, seq int) {
 	events[user][seq] = true
 }
 
-func printGaps(sink, dlt map[string]map[int]bool) {
+func printGaps(sink, dlt map[string]map[int]bool) int {
 	all := make(map[string]map[int]bool)
 
 	for user, seqs := range sink {
@@ -138,18 +137,11 @@ func printGaps(sink, dlt map[string]map[int]bool) {
 		}
 	}
 
-	fmt.Println("\n=== SEQ GAPS ===")
-
-	users := make([]string, 0, len(all))
-	for user := range all {
-		users = append(users, user)
-	}
-	sort.Strings(users)
-
 	totalGaps := 0
+	totalExpected := 0
+	totalUnique := 0
 
-	for _, user := range users {
-		seqs := all[user]
+	for _, seqs := range all {
 		maxSeq := 0
 		for seq := range seqs {
 			if seq > maxSeq {
@@ -157,24 +149,32 @@ func printGaps(sink, dlt map[string]map[int]bool) {
 			}
 		}
 
-		var missing []int
+		totalExpected += maxSeq
+
 		for seq := 1; seq <= maxSeq; seq++ {
-			if !seqs[seq] {
-				missing = append(missing, seq)
+			if seqs[seq] {
+				totalUnique++
+			} else {
+				totalGaps++
 			}
 		}
-
-		if len(missing) > 0 {
-			totalGaps += len(missing)
-			fmt.Printf("user=%s missing=%v\n", user, missing)
-		}
 	}
+
+	fmt.Println("\nVERIFICATION SUMMARY")
+	fmt.Printf("%-38s %s\n", "CHECK", "RESULT")
+	fmt.Println("-----------------------------------------------")
+	fmt.Printf("%-38s %d\n", "Total users", len(all))
+	fmt.Printf("%-38s %d\n", "Missing sequences", totalGaps)
+	fmt.Printf("%-38s %d\n", "Expected sequences", totalExpected)
+	fmt.Printf("%-38s %d\n", "Unique sequences in sink + DLT", totalUnique)
 
 	if totalGaps == 0 {
-		fmt.Println("No seq gaps found.")
+		fmt.Println("\n                 NO DATA LOSS")
 	} else {
-		fmt.Printf("Total missing seq: %d\n", totalGaps)
+		fmt.Printf("\n                 WARNING: %d MISSING SEQUENCES\n", totalGaps)
 	}
+
+	return totalGaps
 }
 
 func printDuplicates(ctx context.Context, db *pgx.Conn) {
@@ -190,7 +190,7 @@ func printDuplicates(ctx context.Context, db *pgx.Conn) {
 		return
 	}
 
-	fmt.Println("\n=== DUPLICATES ===")
+	fmt.Println("\n=== DEDUPLICATION ===")
 	fmt.Printf("Discarded duplicate deliveries: %d\n", total)
 }
 
@@ -211,8 +211,8 @@ func printOrderViolations(ctx context.Context, db *pgx.Conn) {
 		return
 	}
 
-	fmt.Println("\n=== ORDER VIOLATIONS ===")
-	fmt.Printf("Lower seq written later than higher seq: %d\n", count)
+	fmt.Println("\n=== ORDER CHECK ===")
+	fmt.Printf("Out-of-order event pairs: %d\n", count)
 }
 
 func getEnv(key, fallback string) string {
