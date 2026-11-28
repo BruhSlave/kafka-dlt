@@ -88,7 +88,6 @@ services:
       context: ./producer
       dockerfile: Dockerfile
     container_name: producer-1
-    restart: unless-stopped
     depends_on:
       topic-init:
         condition: service_completed_successfully
@@ -98,7 +97,7 @@ services:
       PRODUCER_ID: producer-1
       USER_ID_START: 1
       USER_ID_END: 100
-      RATE: 5
+      RATE: 1
       KEY_MODE: user_id
 
   producer-2:
@@ -106,7 +105,6 @@ services:
       context: ./producer
       dockerfile: Dockerfile
     container_name: producer-2
-    restart: unless-stopped
     depends_on:
       topic-init:
         condition: service_completed_successfully
@@ -116,7 +114,7 @@ services:
       PRODUCER_ID: producer-2
       USER_ID_START: 101
       USER_ID_END: 200
-      RATE: 5
+      RATE: 1
       KEY_MODE: user_id
 
   producer-3:
@@ -124,7 +122,6 @@ services:
       context: ./producer
       dockerfile: Dockerfile
     container_name: producer-3
-    restart: unless-stopped
     depends_on:
       topic-init:
         condition: service_completed_successfully
@@ -134,7 +131,7 @@ services:
       PRODUCER_ID: producer-3
       USER_ID_START: 201
       USER_ID_END: 300
-      RATE: 5
+      RATE: 1
       KEY_MODE: user_id
 
   
@@ -143,7 +140,6 @@ services:
       context: ./consumer
       dockerfile: Dockerfile
     container_name: consumer-1
-    restart: unless-stopped
     depends_on:
       topic-init:
         condition: service_completed_successfully
@@ -154,7 +150,7 @@ services:
       TOPIC: events
       GROUP_ID: events-processor
       CONSUMER_ID: consumer-1
-      PROCESSING_DELAY_MS: 500
+      PROCESSING_DELAY_MS: 100
       DATABASE_URL: postgres://kafka:kafka_pass@postgres:5432/events_sink
 
   consumer-2:
@@ -162,7 +158,6 @@ services:
       context: ./consumer
       dockerfile: Dockerfile
     container_name: consumer-2
-    restart: unless-stopped
     depends_on:
       topic-init:
         condition: service_completed_successfully
@@ -173,7 +168,7 @@ services:
       TOPIC: events
       GROUP_ID: events-processor
       CONSUMER_ID: consumer-2
-      PROCESSING_DELAY_MS: 500
+      PROCESSING_DELAY_MS: 100
       DATABASE_URL: postgres://kafka:kafka_pass@postgres:5432/events_sink
 
   consumer-3:
@@ -181,7 +176,6 @@ services:
       context: ./consumer
       dockerfile: Dockerfile
     container_name: consumer-3
-    restart: unless-stopped
     depends_on:
       topic-init:
         condition: service_completed_successfully
@@ -192,7 +186,7 @@ services:
       TOPIC: events
       GROUP_ID: events-processor
       CONSUMER_ID: consumer-3
-      PROCESSING_DELAY_MS: 500
+      PROCESSING_DELAY_MS: 100
       DATABASE_URL: postgres://kafka:kafka_pass@postgres:5432/events_sink
 
   postgres:
